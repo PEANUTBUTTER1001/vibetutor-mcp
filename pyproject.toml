@@ -1,0 +1,61 @@
+[project]
+name = "vibetutor-mcp"
+version = "0.1.0"
+description = "사용자 코드 기반 맞춤형 실습 교재(PDF)를 생성하는 AI 튜터 MCP 서버"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+    "mcp[cli]>=1.2.0",
+    "pydantic>=2.6",
+    "pydantic-settings>=2.2",
+    "jinja2>=3.1",
+    "weasyprint>=61.0",
+    "sqlalchemy>=2.0",
+    "anyio>=4.0",
+]
+
+[project.scripts]
+vibetutor-mcp = "vibetutor_mcp.main:main"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.4",
+    "black>=24.0",
+    "mypy>=1.10",
+    "pytest>=8.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/vibetutor_mcp"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+# E/F(pyflakes,pycodestyle), I(isort), UP(pyupgrade), B(bugbear)
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+mypy_path = "src"
+packages = ["vibetutor_mcp"]
+# weasyprint 등 일부 네이티브 라이브러리는 타입 스텁을 제공하지 않음
+[[tool.mypy.overrides]]
+module = ["weasyprint.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

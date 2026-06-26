@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# venv / uv
+.venv/
+venv/
+
+# 환경 변수 / 로컬 설정 (core/config.py 가 .env 를 로드함)
+.env
+.env.*
+!.env.example
+
+# 타입체크 / 테스트 / 커버리지
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# 런타임 산출물 (SQLite DB)
+output/
+*.sqlite3
+*.db
+
+# 교재 PDF 산출물
+#   주의: 아래는 '모든' PDF 를 무시합니다. DoD 의 '샘플 PDF' 를 저장소에 커밋하려면
+#   이 줄을 지우거나 `!docs/samples/*.pdf` 처럼 예외를 추가하세요.
+*.pdf
+
+# OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# 에디터
+*.swp
+*~
+
+# IDE — PyCharm 은 .idea/.gitignore 로 일부(workspace.xml 등)만 무시합니다.
+.idea/
+
+AGENTS.md
+CLAUDE.md
+DESIGN.md
+SKILLS.md
+0_START_HERE.md
