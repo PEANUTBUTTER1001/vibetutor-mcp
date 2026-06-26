@@ -49,4 +49,3 @@ def to_entity(material: StudyMaterial) -> StudyMaterialEntity:
         topic_title=material.topic_title,
         file_path=material.file_path,
     )
-4
