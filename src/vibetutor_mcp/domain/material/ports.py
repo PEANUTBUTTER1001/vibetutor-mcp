@@ -23,8 +23,12 @@ class CodeScanner(Protocol):
 class MaterialRenderer(Protocol):
     """검증된 요청을 교재 HTML 문자열로 렌더링한다(예: Jinja2)."""
 
-    def render(self, request: MaterialRequest) -> str:
-        """렌더링된 HTML 문자열을 반환한다."""
+    def render(self, request: MaterialRequest, generated_at: str, content_hash: str) -> str:
+        """렌더링된 HTML 문자열을 반환한다.
+
+        ``generated_at`` (표지 작성일자)·``content_hash`` (재현성 식별자)는 비결정적
+        값을 렌더러 내부에서 만들지 않도록 호출자(UseCase)가 결정해 주입한다(NFR-10).
+        """
         ...
 
 
@@ -33,4 +37,12 @@ class PdfExporter(Protocol):
 
     def export(self, topic: str, html: str) -> str:
         """저장된 PDF 파일의 절대 경로를 반환한다."""
+        ...
+
+
+class Clock(Protocol):
+    """현재 날짜를 제공하는 시계(표지 작성일자 결정화·테스트 고정용 Port)."""
+
+    def today_iso(self) -> str:
+        """``YYYY-MM-DD`` 형식의 오늘 날짜 문자열을 반환한다."""
         ...

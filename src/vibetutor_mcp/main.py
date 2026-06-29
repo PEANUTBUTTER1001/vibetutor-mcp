@@ -13,9 +13,17 @@ from vibetutor_mcp.data.material.exporter import WeasyPrintExporter
 from vibetutor_mcp.data.material.renderer import JinjaMaterialRenderer
 from vibetutor_mcp.data.material.repository_impl import SqliteMaterialRepository
 from vibetutor_mcp.data.material.scanner import LocalCodeScanner
+from vibetutor_mcp.data.system_clock import SystemClock
+from vibetutor_mcp.domain.material.query import (
+    GetMaterialUseCase,
+    ListMaterialsUseCase,
+    SearchMaterialUseCase,
+)
 from vibetutor_mcp.domain.material.usecase import GenerateTutorMaterialUseCase
 from vibetutor_mcp.presentation.prompts.template import register_prompts
+from vibetutor_mcp.presentation.resources.materials import register_resources
 from vibetutor_mcp.presentation.tools.generate_material import register_tools
+from vibetutor_mcp.presentation.tools.search_material import register_search_tool
 
 
 def build() -> FastMCP:
@@ -23,16 +31,22 @@ def build() -> FastMCP:
     cfg = Settings()
 
     repository = SqliteMaterialRepository(cfg.session_factory)
-    use_case = GenerateTutorMaterialUseCase(
+    generate_use_case = GenerateTutorMaterialUseCase(
         scanner=LocalCodeScanner(cfg.project_root),
         renderer=JinjaMaterialRenderer(cfg.template_dir),
         exporter=WeasyPrintExporter(cfg.output_dir, cfg.font_dir),
         repository=repository,
+        clock=SystemClock(),
     )
+    search_use_case = SearchMaterialUseCase(repository)
+    list_use_case = ListMaterialsUseCase(repository)
+    get_use_case = GetMaterialUseCase(repository)
 
     mcp = FastMCP("VibeTutor")
     register_prompts(mcp)
-    register_tools(mcp, use_case)
+    register_tools(mcp, generate_use_case)
+    register_search_tool(mcp, search_use_case)
+    register_resources(mcp, list_use_case, get_use_case)
     return mcp
 
 

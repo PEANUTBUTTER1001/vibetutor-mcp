@@ -25,3 +25,11 @@ class MaterialRepository(Protocol):
     def find_by_topic(self, topic: str) -> StudyMaterial | None:
         """주제로 교재를 조회한다. 없으면 ``None``."""
         ...
+
+    def find_by_id(self, material_id: int) -> StudyMaterial | None:
+        """id 로 교재 단건을 조회한다. 없으면 ``None`` (Resource 단건 노출용, FR-12)."""
+        ...
+
+    def search_materials(self, query: str) -> list[StudyMaterial]:
+        """제목에 ``query`` 가 포함된 교재를 최신순으로 검색한다(FR-11)."""
+        ...

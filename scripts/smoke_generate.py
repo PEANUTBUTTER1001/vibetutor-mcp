@@ -17,6 +17,7 @@ from vibetutor_mcp.data.material.exporter import WeasyPrintExporter
 from vibetutor_mcp.data.material.renderer import JinjaMaterialRenderer
 from vibetutor_mcp.data.material.repository_impl import SqliteMaterialRepository
 from vibetutor_mcp.data.material.scanner import LocalCodeScanner
+from vibetutor_mcp.data.system_clock import SystemClock
 from vibetutor_mcp.domain.material.model import MaterialRequest, StudySection
 from vibetutor_mcp.domain.material.usecase import GenerateTutorMaterialUseCase
 
@@ -28,6 +29,7 @@ def main() -> None:
         renderer=JinjaMaterialRenderer(cfg.template_dir),
         exporter=WeasyPrintExporter(cfg.output_dir, cfg.font_dir),
         repository=SqliteMaterialRepository(cfg.session_factory),
+        clock=SystemClock(),
     )
 
     # 두 번째 섹션은 code_example 을 비워 두어, 스캐너가 이 저장소의 실제 코드를
@@ -60,6 +62,7 @@ def main() -> None:
     print("생성 완료")
     print("  파일 :", material.file_path)
     print("  DB id:", material.id)
+    print("  해시 :", material.content_hash)
 
 
 if __name__ == "__main__":

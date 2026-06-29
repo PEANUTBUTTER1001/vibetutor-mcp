@@ -78,13 +78,17 @@ def test_renderer_outputs_tokens_korean_and_fonts() -> None:
                     heading="데코레이터 개념", concept_explanation="함수를 감싸는 함수다."
                 ),
             ],
-        )
+        ),
+        "2026-01-01",
+        "0" * 64,
     )
     assert "파이썬 데코레이터" in html  # 한글 제목
     assert "@font-face" in html  # 폰트 임베딩 선언 포함
     assert "var(--color-accent" in html  # DESIGN 토큰 사용(하드코딩 색상 아님)
     assert "AI 생성 초안" in html  # 초안 고지(§8.1)
     assert "Pretendard-Regular.ttf" in html  # 한글 TTF 참조
+    assert "2026-01-01" in html  # 주입된 작성일자(시스템 시계 비의존)
+    assert "0000000000000000" in html  # 콘텐츠 해시 콜로폰(앞 16자리)
 
 
 def test_renderer_escapes_code_example() -> None:
@@ -99,7 +103,9 @@ def test_renderer_escapes_code_example() -> None:
                     code_example="List<String> & <script>",
                 ),
             ],
-        )
+        ),
+        "2026-01-01",
+        "a" * 64,
     )
     assert "&lt;String&gt;" in html  # < > 가 안전하게 이스케이프됨
     assert "<script>" not in html  # 원본 태그가 그대로 들어가지 않음
@@ -118,7 +124,9 @@ def test_renderer_renders_code_source_caption() -> None:
                     code_source="src/foo.py:10-20",
                 ),
             ],
-        )
+        ),
+        "2026-01-01",
+        "b" * 64,
     )
     assert "출처:" in html
     assert "src/foo.py:10-20" in html
