@@ -26,6 +26,8 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-install-project --no-dev
 
 # 2) 애플리케이션 소스 + 교재 템플릿/폰트
+# README.md 는 pyproject 의 `readme` 필드가 참조하므로 프로젝트 빌드 전에 함께 복사한다.
+COPY README.md ./
 COPY src ./src
 COPY templates ./templates
 RUN uv sync --frozen --no-dev

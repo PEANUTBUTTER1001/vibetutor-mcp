@@ -21,6 +21,10 @@ class StudySection(BaseModel):
     # 이론 중심 교재도 지원하기 위해 코드/연습문제는 Optional 로 둔다.
     code_example: str | None = Field(default=None, description="실제 코드 예제(선택)")
     exercises: str | None = Field(default=None, description="연습 문제(선택)")
+    # 스캐너가 주입한 코드의 출처(파일·라인). 자동 생성 초안의 출처 표기 의무(SRS §8.1, FR-15).
+    code_source: str | None = Field(
+        default=None, description="주입된 코드 예제의 출처(예: src/foo.py:12-20)"
+    )
 
 
 class MaterialRequest(BaseModel):

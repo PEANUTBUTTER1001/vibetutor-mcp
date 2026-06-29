@@ -1,0 +1,200 @@
+/* templates/styles/components.css
+   DESIGN.md §4~6 공통 컴포넌트 · 레이아웃 · 인쇄 원칙.
+   모든 색상/폰트/크기는 tokens.css 의 var(--token) 으로만 참조한다(하드코딩 금지). */
+
+/* --- 5. 페이지 & 푸터(문서명 + 페이지 번호) --- */
+@page {
+  size: A4;
+  margin: 20mm 17mm 18mm 17mm;
+
+  @bottom-left {
+    content: "VibeTutor 학습 교재";
+    font-family: var(--font-sans);
+    font-size: var(--fs-caption);
+    color: var(--color-muted);
+  }
+  @bottom-right {
+    content: counter(page);
+    font-family: var(--font-sans);
+    font-size: var(--fs-caption);
+    color: var(--color-muted);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--color-body);
+  background: var(--color-page-bg);
+  margin: 0;
+}
+
+/* --- 4.1 표지(Cover) --- */
+.cover {
+  margin-bottom: 20pt;
+}
+h1,
+.cover-title {
+  font-family: var(--font-sans);
+  font-size: var(--fs-title);
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  color: var(--color-heading);
+  margin: 0 0 12px;
+}
+.meta {
+  font-size: var(--fs-meta);
+  color: var(--color-muted);
+  line-height: 1.9;
+}
+.meta .label {
+  font-weight: 700;
+  color: var(--color-body);
+  margin-right: 6px;
+}
+
+/* --- 4.2 섹션 헤더(Section Header) --- */
+h2 {
+  font-family: var(--font-sans);
+  font-size: var(--fs-section);
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  color: var(--color-heading);
+  border-bottom: 1.5px solid var(--color-border);
+  margin: 30px 0 14px;
+  padding-bottom: 6px;
+}
+h2 .num {
+  color: var(--color-accent);
+  margin-right: 6px;
+}
+h3 {
+  font-family: var(--font-sans);
+  font-size: var(--fs-sub);
+  font-weight: 700;
+  color: var(--color-heading);
+  margin: 18px 0 8px;
+}
+
+p {
+  margin: 8px 0;
+}
+/* 개념 설명·연습 문제: 원문 줄바꿈 보존(이스케이프된 텍스트). */
+.concept {
+  white-space: pre-line;
+}
+
+/* --- 4.6 불릿(List) --- */
+ul {
+  list-style: none;
+  padding-left: 18px;
+}
+ul li {
+  position: relative;
+  margin: 4px 0;
+}
+ul li::before {
+  content: "\2022";
+  color: var(--color-accent);
+  position: absolute;
+  left: -14px;
+  font-weight: 700;
+}
+.lead {
+  font-weight: 700;
+  font-size: var(--fs-lead);
+  color: var(--color-heading);
+}
+
+/* --- 4.3 콜아웃(Callout) --- */
+.callout {
+  background: var(--color-info-bg);
+  border-left: 4px solid var(--color-info-bar);
+  padding: 12px 14px;
+  margin: 14px 0;
+  border-radius: 4px;
+}
+.callout .title {
+  font-weight: 700;
+  color: var(--color-accent-strong);
+  margin-bottom: 4px;
+}
+.callout.warn {
+  background: var(--color-warn-bg);
+  border-left-color: var(--color-warn-bar);
+}
+.callout.warn .title {
+  color: var(--color-warn-bar);
+}
+
+/* --- 4.4 코드 / 구조 박스(Code Block) --- */
+pre {
+  background: var(--color-code-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  padding: 12px 14px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-code);
+  line-height: var(--lh-code);
+  color: var(--color-body);
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+code {
+  font-family: var(--font-mono);
+  font-size: var(--fs-code);
+  color: var(--color-code-text);
+  background: var(--color-code-surface);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+pre code {
+  color: var(--color-body);
+  background: transparent;
+  padding: 0;
+}
+.code-source {
+  font-size: var(--fs-caption);
+  color: var(--color-muted);
+  margin: 4px 0 0;
+}
+
+/* --- 4.5 표(Table) --- */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0;
+  font-size: var(--fs-body);
+}
+th {
+  background: var(--color-table-header);
+  border-bottom: 2px solid var(--color-border);
+  text-align: left;
+  padding: 7px 10px;
+  color: var(--color-heading);
+}
+td {
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--color-border);
+}
+tr:nth-child(even) td {
+  background: var(--color-zebra);
+}
+
+/* --- 6. 인쇄 / 페이지 분리 제어 --- */
+.callout,
+pre,
+table,
+img {
+  break-inside: avoid;
+}
+h1,
+h2,
+h3 {
+  break-after: avoid;
+}

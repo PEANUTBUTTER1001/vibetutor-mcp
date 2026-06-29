@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import importlib
 import pkgutil
+from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
@@ -44,13 +45,18 @@ def test_study_section_rejects_blank_heading() -> None:
         StudySection(heading="", concept_explanation="설명")
 
 
-def test_generate_tool_stub_raises_not_implemented() -> None:
-    """스텁 UseCase 경로는 NotImplementedError 로 명시적 중단된다 (시나리오 #6)."""
+def test_scanner_returns_request_without_error(tmp_path: Path) -> None:
+    """MVP 2단계: 스캐너는 더 이상 NotImplementedError 를 던지지 않고 요청을 반환한다."""
     from vibetutor_mcp.data.material.scanner import LocalCodeScanner
 
-    scanner = LocalCodeScanner(project_root=".")
-    with pytest.raises(NotImplementedError):
-        scanner.inject_examples(MaterialRequest(topic_title="t", sections=[]))
+    scanner = LocalCodeScanner(project_root=str(tmp_path))
+    request = MaterialRequest(
+        topic_title="t",
+        sections=[StudySection(heading="제목", concept_explanation="설명")],
+    )
+    result = scanner.inject_examples(request)
+    assert isinstance(result, MaterialRequest)
+    assert len(result.sections) == 1
 
 
 def test_domain_has_no_framework_imports() -> None:
