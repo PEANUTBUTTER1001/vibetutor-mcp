@@ -21,6 +21,9 @@
         <div><span class="label">작성일자</span>{{ generated_at }}</div>
         {% endif %}
         <div><span class="label">구성</span>{{ sections | length }}개 섹션</div>
+        {% if content_hash %}
+        <div><span class="label">콘텐츠 해시</span>{{ content_hash[:16] }}</div>
+        {% endif %}
       </div>
       <div class="callout warn">
         <div class="title">AI 생성 초안 — 검증 필요</div>

@@ -36,3 +36,36 @@ jobs:
 
       - name: Pytest
         run: uv run pytest
+
+  sample-pdf:
+    name: Generate Sample PDF (E2E artifact)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install WeasyPrint native deps (Pango/cairo/GDK-PixBuf)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libpango-1.0-0 libpangoft2-1.0-0 libcairo2 libgdk-pixbuf-2.0-0 \
+            libffi-dev fonts-dejavu-core
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.11"
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Generate sample PDF (한글 임베딩 실물 산출)
+        run: uv run python scripts/smoke_generate.py
+
+      - name: Upload sample PDF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sample-material-pdf
+          path: output/*.pdf
+          if-no-files-found: error

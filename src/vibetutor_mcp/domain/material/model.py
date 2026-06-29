@@ -44,3 +44,5 @@ class StudyMaterial:
     file_path: str
     id: int = 0
     created_at: datetime | None = None
+    # 동일 입력 → 동일 값(재현성, NFR-10). 생성 시 산출되어 DB·Resource 로 노출된다.
+    content_hash: str | None = None

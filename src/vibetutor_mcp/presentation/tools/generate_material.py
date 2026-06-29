@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from mcp.server.fastmcp import FastMCP
 
+from vibetutor_mcp.core.exceptions import PipelineError
 from vibetutor_mcp.domain.material.model import MaterialRequest
 from vibetutor_mcp.domain.material.usecase import GenerateTutorMaterialUseCase
 
@@ -18,5 +19,16 @@ def register_tools(mcp: FastMCP, use_case: GenerateTutorMaterialUseCase) -> None
     @mcp.tool()
     def generate_tutor_material(request: MaterialRequest) -> str:
         """표준 양식에 맞춰 사용자 코드 연동형 교재 PDF 를 생성한다."""
-        material = use_case(request)
-        return f"교재 생성 완료 → {material.file_path}"
+        # 얇은 어댑터: 비즈니스 로직 없이 위임하고, 실패는 구조화해 사람이 읽을 수 있게
+        # 변환한다(stage/reason/hint, FR-14). 예외를 그대로 누출시키지 않는다.
+        try:
+            material = use_case(request)
+        except PipelineError as exc:
+            return (
+                "교재 생성 실패\n"
+                f"- 단계(stage): {exc.stage}\n"
+                f"- 사유(reason): {exc.reason}\n"
+                f"- 힌트(hint): {exc.hint}"
+            )
+        digest = material.content_hash[:12] if material.content_hash else "-"
+        return f"교재 생성 완료 → {material.file_path} (id={material.id}, hash={digest})"

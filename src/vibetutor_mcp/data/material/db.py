@@ -31,6 +31,8 @@ class StudyMaterialEntity(Base):
     topic_title: Mapped[str] = mapped_column(String, nullable=False)
     file_path: Mapped[str] = mapped_column(String, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+    # 재현성 식별자(NFR-10). 과거 레코드 호환을 위해 nullable.
+    content_hash: Mapped[str | None] = mapped_column(String, nullable=True)
 
 
 def to_domain(entity: StudyMaterialEntity) -> StudyMaterial:
@@ -40,6 +42,7 @@ def to_domain(entity: StudyMaterialEntity) -> StudyMaterial:
         topic_title=entity.topic_title,
         file_path=entity.file_path,
         created_at=entity.created_at,
+        content_hash=entity.content_hash,
     )
 
 
@@ -48,4 +51,5 @@ def to_entity(material: StudyMaterial) -> StudyMaterialEntity:
     return StudyMaterialEntity(
         topic_title=material.topic_title,
         file_path=material.file_path,
+        content_hash=material.content_hash,
     )
