@@ -1,0 +1,70 @@
+/* templates/styles/tokens.css
+   DESIGN.md §2~3 디자인 토큰 + 한글 폰트 임베딩(@font-face).
+   색상/폰트/크기는 모두 var(--token) 으로만 참조한다(하드코딩 금지). */
+
+/* --- 한글 폰트 임베딩 (src 는 base_url = templates/fonts 기준 상대 경로) --- */
+@font-face {
+  font-family: "Pretendard";
+  src: url("Pretendard-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Pretendard";
+  src: url("Pretendard-SemiBold.otf") format("opentype");
+  font-weight: 600;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Pretendard";
+  src: url("Pretendard-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Pretendard";
+  src: url("Pretendard-ExtraBold.otf") format("opentype");
+  font-weight: 800;
+  font-style: normal;
+}
+
+:root {
+  /* 2.1 Primary / Accent */
+  --color-accent: #3b82f6;
+  --color-accent-strong: #1d4ed8;
+
+  /* 2.2 Text */
+  --color-heading: #1f2d3d;
+  --color-body: #353b41;
+  --color-muted: #9aa5b1;
+
+  /* 2.3 Background & Surface */
+  --color-page-bg: #ffffff;
+  --color-code-surface: #f6f8fa;
+  --color-table-header: #f1f5f9;
+  --color-zebra: #fafbfc;
+  --color-border: #d8e0ea;
+
+  /* 2.4 Semantic */
+  --color-info-bg: #eaf2fc;
+  --color-info-bar: #3b82f6;
+  --color-warn-bg: #fdf0e9;
+  --color-warn-bar: #e67e22;
+  --color-code-text: #c0392b;
+
+  /* 3. Typography */
+  --font-sans: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --font-mono: "D2Coding", "Consolas", "Courier New", monospace;
+
+  --fs-title: 21pt;
+  --fs-section: 14.5pt;
+  --fs-sub: 11.5pt;
+  --fs-body: 10.5pt;
+  --fs-lead: 10.5pt;
+  --fs-meta: 9.5pt;
+  --fs-code: 9.5pt;
+  --fs-caption: 8.5pt;
+
+  --lh-body: 1.75;
+  --lh-code: 1.55;
+}
