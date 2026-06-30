@@ -19,9 +19,13 @@ from vibetutor_mcp.domain.material.query import (
     ListMaterialsUseCase,
     SearchMaterialUseCase,
 )
-from vibetutor_mcp.domain.material.usecase import GenerateTutorMaterialUseCase
+from vibetutor_mcp.domain.material.usecase import (
+    GeneratePracticalMaterialUseCase,
+    GenerateTutorMaterialUseCase,
+)
 from vibetutor_mcp.presentation.prompts.template import register_prompts
 from vibetutor_mcp.presentation.resources.materials import register_resources
+from vibetutor_mcp.presentation.tools.generate_markdown_material import register_markdown_tools
 from vibetutor_mcp.presentation.tools.generate_material import register_tools
 from vibetutor_mcp.presentation.tools.search_material import register_search_tool
 
@@ -30,14 +34,29 @@ def build() -> FastMCP:
     """설정을 읽어 구현체를 조립하고 등록을 마친 FastMCP 서버를 반환한다."""
     cfg = Settings()
 
+    renderer = JinjaMaterialRenderer(cfg.template_dir)
+    exporter = WeasyPrintExporter(cfg.output_dir, cfg.font_dir)
     repository = SqliteMaterialRepository(cfg.session_factory)
+    clock = SystemClock()
+
+    # 1. 표준 양식 교재 UseCase (코드 스캐너 사용)
     generate_use_case = GenerateTutorMaterialUseCase(
         scanner=LocalCodeScanner(cfg.project_root),
-        renderer=JinjaMaterialRenderer(cfg.template_dir),
-        exporter=WeasyPrintExporter(cfg.output_dir, cfg.font_dir),
+        renderer=renderer,
+        exporter=exporter,
         repository=repository,
-        clock=SystemClock(),
+        clock=clock,
     )
+
+    # 2. 10단계 실전 교재 UseCase (스캐너 비활성)
+    practical_use_case = GeneratePracticalMaterialUseCase(
+        renderer=renderer,
+        exporter=exporter,
+        repository=repository,
+        clock=clock,
+    )
+
+    # 읽기 전용 UseCase
     search_use_case = SearchMaterialUseCase(repository)
     list_use_case = ListMaterialsUseCase(repository)
     get_use_case = GetMaterialUseCase(repository)
@@ -45,6 +64,7 @@ def build() -> FastMCP:
     mcp = FastMCP("VibeTutor")
     register_prompts(mcp)
     register_tools(mcp, generate_use_case)
+    register_markdown_tools(mcp, practical_use_case)
     register_search_tool(mcp, search_use_case)
     register_resources(mcp, list_use_case, get_use_case)
     return mcp

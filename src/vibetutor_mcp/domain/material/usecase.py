@@ -18,8 +18,8 @@ from typing import TypeVar
 from vibetutor_mcp.core.exceptions import PipelineError, VibeTutorError
 
 from .hashing import compute_content_hash
-from .model import MaterialRequest, StudyMaterial
-from .ports import Clock, CodeScanner, MaterialRenderer, PdfExporter
+from .model import MaterialRequest, PracticalMaterialRequest, StudyMaterial
+from .ports import Clock, CodeScanner, MaterialRenderer, PdfExporter, PracticalMaterialRenderer
 from .repository import MaterialRepository
 
 _T = TypeVar("_T")
@@ -58,6 +58,64 @@ class GenerateTutorMaterialUseCase:
         html = self._run_stage(
             "render",
             lambda: self._renderer.render(enriched, generated_at, content_hash),
+            "템플릿/토큰(CSS) 경로와 문법을 확인하세요.",
+        )
+        path = self._run_stage(
+            "export",
+            lambda: self._exporter.export(request.topic_title, html),
+            "다른 제목을 쓰거나 기존 출력 파일을 정리한 뒤 다시 시도하세요.",
+        )
+        material = StudyMaterial(
+            topic_title=request.topic_title,
+            file_path=path,
+            content_hash=content_hash,
+        )
+        new_id = self._run_stage(
+            "persist",
+            lambda: self._repo.save_material(material),
+            "DB 경로와 쓰기 권한을 확인하세요.",
+        )
+        return replace(material, id=new_id)
+
+    @staticmethod
+    def _run_stage(stage: str, action: Callable[[], _T], hint: str) -> _T:
+        """단계를 실행하고, 실패 시 단계 정보를 담은 ``PipelineError`` 로 재던진다."""
+        try:
+            return action()
+        except PipelineError:
+            raise  # 이미 구조화된 실패는 그대로 전파.
+        except VibeTutorError as exc:
+            raise PipelineError(stage, str(exc), hint) from exc
+        except Exception as exc:
+            # 모든 단계 실패를 구조화해 전달(FR-14): 어떤 예외든 stage/reason/hint 로 변환.
+            raise PipelineError(stage, f"{type(exc).__name__}: {exc}", hint) from exc
+
+
+class GeneratePracticalMaterialUseCase:
+    """10단계 실전 교재 PDF 를 생성한다(스캐너 불필요)."""
+
+    def __init__(
+        self,
+        renderer: PracticalMaterialRenderer,
+        exporter: PdfExporter,
+        repository: MaterialRepository,
+        clock: Clock,
+    ) -> None:
+        self._renderer = renderer
+        self._exporter = exporter
+        self._repo = repository
+        self._clock = clock
+
+    def __call__(self, request: PracticalMaterialRequest) -> StudyMaterial:
+        content_hash = self._run_stage(
+            "hash",
+            lambda: compute_content_hash(request),
+            "입력 섹션의 직렬화 가능 여부를 확인하세요.",
+        )
+        generated_at = self._clock.today_iso()
+        html = self._run_stage(
+            "render",
+            lambda: self._renderer.render_practical(request, generated_at, content_hash),
             "템플릿/토큰(CSS) 경로와 문법을 확인하세요.",
         )
         path = self._run_stage(

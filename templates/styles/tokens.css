@@ -51,6 +51,11 @@
   --color-warn-bg: #fdf0e9;
   --color-warn-bar: #e67e22;
   --color-code-text: #c0392b;
+  --color-objective-bg: #f0fdf4;
+  --color-bug-bg: #fee2e2;
+  --color-bug-bar: #b91c1c;
+  --color-pro-tip-bg: #fffbeb;
+  --color-pro-tip-bar: #f59e0b;
 
   /* 3. Typography */
   --font-sans: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;

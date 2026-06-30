@@ -1,6 +1,6 @@
-"""표준 교재 작성 Prompt 어댑터 (학습 진입점, 방식 B).
+"""통교재 작성 Prompt 어댑터 (학습 진입점).
 
-일관된 교재 구조를 강제하기 위한 표준 프롬프트를 배포한다.
+generate_book_from_markdown 도구와 함께 사용하는 표준 마크다운 작성 프롬프트를 배포한다.
 """
 
 from __future__ import annotations
@@ -9,13 +9,50 @@ from mcp.server.fastmcp import FastMCP
 
 
 def register_prompts(mcp: FastMCP) -> None:
-    """표준 교재 작성 Prompt 를 MCP 서버에 등록한다."""
+    """통교재 작성 Prompt 를 MCP 서버에 등록한다."""
 
     @mcp.prompt()
-    def study_material_template(topic: str) -> str:
-        """일관된 학습 진입점을 제공하는 표준 교재 작성 프롬프트."""
+    def book_from_chat_template(topic: str) -> str:
+        """대화 히스토리 기반 통교재 마크다운 작성 표준 프롬프트."""
         return (
-            f"'{topic}' 주제로 표준 교재를 작성한다. 각 섹션은 "
-            "heading / concept_explanation / code_example / exercises 구조를 따른다. "
-            "작성한 섹션들은 generate_tutor_material Tool 의 MaterialRequest 스키마로 전달한다."
+            f"'{topic}' 주제로 10단계 실전 교재 마크다운을 작성한다.\n\n"
+            "## 전체 구조\n"
+            "챕터마다 '# 01장. [제목]' 형식의 헤딩으로 시작하고,\n"
+            "각 챕터 안에 아래 서브섹션(###)을 순서대로 포함한다.\n\n"
+            "### 들어가며\n"
+            "본 챕터에서 다루는 핵심 개념을 2~3문장으로 소개한다.\n\n"
+            "### 학습 목표\n"
+            "- 목표 1\n"
+            "- 목표 2\n\n"
+            "### 아키텍처 비교\n"
+            "| 비교 항목 | 기존 방식 | 현대적 방식 |\n"
+            "|---|---|---|\n"
+            "| 항목명 | 기존 설명 | 현대 설명 |\n\n"
+            "### 핵심 코드 분석\n"
+            "⚠️ 반드시 코드 한 줄(또는 블록)마다 동작 원리를 설명하는 주석을 달아야 한다.\n"
+            "주석 없는 순수 코드만 작성하면 안 된다. 아래 형식을 따른다:\n"
+            "```python\n"
+            "def example(items):      # [포인트 1] 입력 목록을 순회\n"
+            "    for item in items:   # [포인트 2] 각 항목에 대해\n"
+            "        process(item)    # [포인트 3] 실제 처리 수행\n"
+            "```\n\n"
+            "### 흔한 실수 (Bug Box)\n"
+            "[증상] 에러 메시지 또는 잘못된 결과\n"
+            "[원인] 원인 설명\n"
+            "[해결] 해결 방법\n\n"
+            "### 프로 팁\n"
+            "실무에서 바로 적용할 수 있는 팁을 작성한다.\n\n"
+            "### 심화 학습 포인트\n"
+            "- 포인트 1\n"
+            "- 포인트 2\n\n"
+            "### Q&A\n"
+            "| 핵심 질문 | 모범 답안 |\n"
+            "|---|---|\n"
+            "| 질문 | 답변 |\n\n"
+            "### 용어 사전\n"
+            "- 용어: 정의\n\n"
+            "### 공식 문서 링크\n"
+            "- https://...\n\n"
+            "---\n"
+            "마크다운 작성 완료 후 generate_book_from_markdown 도구로 PDF 를 생성한다."
         )

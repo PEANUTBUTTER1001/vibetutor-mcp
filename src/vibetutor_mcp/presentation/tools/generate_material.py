@@ -18,7 +18,10 @@ def register_tools(mcp: FastMCP, use_case: GenerateTutorMaterialUseCase) -> None
 
     @mcp.tool()
     def generate_tutor_material(request: MaterialRequest) -> str:
-        """표준 양식에 맞춰 사용자 코드 연동형 교재 PDF 를 생성한다."""
+        """[특수 목적용] 사용자가 직접 구조화된 JSON 데이터 구조를 세부적으로 입력했거나,
+        단일 챕터/섹션 단위로 정밀하게 로컬 코드를 스캔하여 교재를 만들 때만 사용하십시오.
+        일반적인 포괄적 교재 생성 요청에는 이 툴을 사용하지 마십시오.
+        """
         # 얇은 어댑터: 비즈니스 로직 없이 위임하고, 실패는 구조화해 사람이 읽을 수 있게
         # 변환한다(stage/reason/hint, FR-14). 예외를 그대로 누출시키지 않는다.
         try:

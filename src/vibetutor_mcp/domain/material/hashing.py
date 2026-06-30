@@ -12,31 +12,12 @@ from __future__ import annotations
 import hashlib
 import json
 
-from .model import MaterialRequest
-
-# 해시 입력으로 사용할 섹션 필드(순서·집합 고정 → 직렬화 결정성 보장).
-_SECTION_FIELDS: tuple[str, ...] = (
-    "heading",
-    "concept_explanation",
-    "code_example",
-    "exercises",
-    "code_source",
-)
+from .model import MaterialRequest, PracticalMaterialRequest
 
 
-def compute_content_hash(request: MaterialRequest) -> str:
-    """교재 요청을 정규(canonical) JSON 으로 직렬화해 SHA-256 16진 해시를 반환한다.
-
-    ``ensure_ascii=False`` 로 한글을 원형 유지하고, ``sort_keys=True`` 와 고정
-    구분자로 직렬화하여 같은 콘텐츠가 항상 동일한 바이트열·해시를 갖도록 한다.
-    """
-    payload = {
-        "topic_title": request.topic_title,
-        "sections": [
-            {field: getattr(section, field) for field in _SECTION_FIELDS}
-            for section in request.sections
-        ],
-    }
+def compute_content_hash(request: MaterialRequest | PracticalMaterialRequest) -> str:
+    """교재 요청을 정규(canonical) JSON 으로 직렬화해 SHA-256 16진 해시를 반환한다."""
+    payload = request.model_dump()
     blob = json.dumps(
         payload,
         ensure_ascii=False,
