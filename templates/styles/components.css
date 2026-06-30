@@ -186,8 +186,61 @@ tr:nth-child(even) td {
   background: var(--color-zebra);
 }
 
+/* --- 4.7 10단계 실전 교재 전용 컴포넌트 --- */
+.quote {
+  font-style: italic;
+  border-left: 4px solid var(--color-accent);
+  padding: 8px 14px;
+  margin: 12px 0;
+  background: var(--color-code-surface);
+}
+.objective-box {
+  background: var(--color-objective-bg);
+  padding: 12px 14px;
+  margin: 14px 0;
+  border-radius: 4px;
+}
+.bug-box {
+  background: var(--color-bug-bg);
+  border-left: 4px solid var(--color-bug-bar);
+  padding: 12px 14px;
+  margin: 14px 0;
+  border-radius: 4px;
+}
+.bug-box .title {
+  font-weight: 700;
+  color: var(--color-bug-bar);
+  margin-bottom: 4px;
+}
+.pro-tip-box {
+  background: var(--color-pro-tip-bg);
+  border-left: 4px solid var(--color-pro-tip-bar);
+  padding: 12px 14px;
+  margin: 14px 0;
+  border-radius: 4px;
+}
+.pro-tip-box .title {
+  font-weight: 700;
+  color: var(--color-pro-tip-bar);
+  margin-bottom: 4px;
+}
+.glossary-link {
+  color: var(--color-accent);
+  border-bottom: 1px dashed var(--color-accent);
+  text-decoration: none;
+}
+.glossary-box {
+  margin: 8px 0;
+  padding: 6px 10px;
+  border-left: 2px solid var(--color-border);
+}
+
 /* --- 6. 인쇄 / 페이지 분리 제어 --- */
 .callout,
+.objective-box,
+.bug-box,
+.pro-tip-box,
+.quote,
 pre,
 table,
 img {

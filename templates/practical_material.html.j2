@@ -1,0 +1,163 @@
+{#- 10단계 실전 IT 기술 교재 템플릿 (DESIGN.md 양식 준수). -#}
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <title>{{ topic }}</title>
+    <style>
+      {% include "styles/tokens.css" %}
+      {% include "styles/components.css" %}
+    </style>
+  </head>
+  <body>
+    <header class="cover">
+      <h1 class="cover-title">{{ topic }}</h1>
+      <div class="meta">
+        <div><span class="label">생성 도구</span>VibeTutor MCP (10단계 실전 양식)</div>
+        {% if generated_at %}
+        <div><span class="label">작성일자</span>{{ generated_at }}</div>
+        {% endif %}
+        <div><span class="label">구성</span>{{ sections | length }}개 챕터</div>
+        {% if content_hash %}
+        <div><span class="label">콘텐츠 해시</span>{{ content_hash[:16] }}</div>
+        {% endif %}
+      </div>
+      <div class="callout warn">
+        <div class="title">AI 생성 실전 교재 초안 — 검증 필요</div>
+        이 교재는 실무 코드 분석과 디버깅 정보를 포함한 자동 생성 초안입니다. 사용 전 내용을 검토하세요.
+      </div>
+    </header>
+
+    {% for section in sections %}
+    <section class="section">
+      <h2><span class="num">{{ "%02d" | format(loop.index) }}</span>{{ section.heading }}</h2>
+
+      {# 1. 들어가며 #}
+      {% if section.intro %}
+      <div class="quote">{{ section.intro }}</div>
+      {% endif %}
+
+      {# 2. 학습 목표 및 선수 지식 #}
+      {% if section.objectives %}
+      <div class="objective-box">
+        <div class="lead">학습 목표 및 선수 지식</div>
+        <ul>
+          {% for obj in section.objectives %}
+          <li>{{ obj }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      {# 3. 핵심 이론 및 아키텍처 비교 표 #}
+      {% if section.architecture_comparison %}
+      <h3>핵심 이론 및 아키텍처 비교</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>비교 항목</th>
+            <th>기존 방식</th>
+            <th>현대적 방식</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in section.architecture_comparison %}
+          <tr>
+            <td><strong>{{ row.aspect }}</strong></td>
+            <td>{{ row.legacy }}</td>
+            <td>{{ row.modern }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+
+      {# 4. 주석으로 읽는 핵심 코드 분석 #}
+      {% if section.code_analysis %}
+      <h3>주석으로 읽는 핵심 코드 분석</h3>
+      <pre><code>{{ section.code_analysis }}</code></pre>
+      {% endif %}
+
+      {# 로컬 프로젝트 스캔 주입 코드 #}
+      {% if section.local_code_integration %}
+      <h3>로컬 프로젝트 연동 실습 코드</h3>
+      <pre><code>{{ section.local_code_integration }}</code></pre>
+      {% if section.code_source %}
+      <p class="code-source">출처: {{ section.code_source }}</p>
+      {% endif %}
+      {% endif %}
+
+      {# 5. 마주친 문제와 디버깅 #}
+      {% if section.bug_box %}
+      <h3>마주친 문제와 디버깅 (Bug Box)</h3>
+      {% for bug in section.bug_box %}
+      <div class="bug-box">
+        <div class="title">[증상] {{ bug.symptom }}</div>
+        <p><strong>원인:</strong> {{ bug.cause }}</p>
+        <p><strong>해결:</strong> {{ bug.solution }}</p>
+      </div>
+      {% endfor %}
+      {% endif %}
+
+      {# 6. 실무 연동 팁 #}
+      {% if section.pro_tip %}
+      <div class="pro-tip-box">
+        <div class="title">실무 연동 팁 (Pro-Tip)</div>
+        <div>{{ section.pro_tip }}</div>
+      </div>
+      {% endif %}
+
+      {# 7. 심화 학습 #}
+      {% if section.study_points %}
+      <h3>심화 학습 (Study Points)</h3>
+      <ul>
+        {% for point in section.study_points %}
+        <li>{{ point }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+
+      {# 8. 단원 이해도 점검 (Q&A) #}
+      {% if section.qna %}
+      <h3>단원 이해도 점검 (Q&A)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 40%;">핵심 질문</th>
+            <th style="width: 60%;">모범 답안</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in section.qna %}
+          <tr>
+            <td><strong>{{ item.question }}</strong></td>
+            <td>{{ item.answer }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+
+      {# 9. 용어 사전 #}
+      {% if section.glossary %}
+      <h3 id="glossary">용어 사전 (Glossary)</h3>
+      {% for item in section.glossary %}
+      <div class="glossary-box">
+        <strong>{{ item.term }}</strong>: {{ item.definition }}
+      </div>
+      {% endfor %}
+      {% endif %}
+
+      {# 10. 공식 문서 링크 #}
+      {% if section.official_links %}
+      <h3>공식 레퍼런스 문서</h3>
+      <ul>
+        {% for link in section.official_links %}
+        <li><a href="{{ link }}">{{ link }}</a></li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </section>
+    {% endfor %}
+  </body>
+</html>

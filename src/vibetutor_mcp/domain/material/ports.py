@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from .model import MaterialRequest
+from .model import MaterialRequest, PracticalMaterialRequest
 
 
 class CodeScanner(Protocol):
@@ -25,6 +25,20 @@ class MaterialRenderer(Protocol):
 
     def render(self, request: MaterialRequest, generated_at: str, content_hash: str) -> str:
         """렌더링된 HTML 문자열을 반환한다.
+
+        ``generated_at`` (표지 작성일자)·``content_hash`` (재현성 식별자)는 비결정적
+        값을 렌더러 내부에서 만들지 않도록 호출자(UseCase)가 결정해 주입한다(NFR-10).
+        """
+        ...
+
+
+class PracticalMaterialRenderer(Protocol):
+    """10단계 실전 교재 요청을 HTML 문자열로 렌더링한다."""
+
+    def render_practical(
+        self, request: PracticalMaterialRequest, generated_at: str, content_hash: str
+    ) -> str:
+        """렌더링된 실전 교재 HTML 문자열을 반환한다.
 
         ``generated_at`` (표지 작성일자)·``content_hash`` (재현성 식별자)는 비결정적
         값을 렌더러 내부에서 만들지 않도록 호출자(UseCase)가 결정해 주입한다(NFR-10).

@@ -19,7 +19,12 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from vibetutor_mcp.core.security import is_excluded_dir, is_sensitive, is_within_root
-from vibetutor_mcp.domain.material.model import MaterialRequest, StudySection
+from vibetutor_mcp.domain.material.model import (
+    MaterialRequest,
+    PracticalMaterialRequest,
+    PracticalStudySection,
+    StudySection,
+)
 
 # 성능 가드(NFR-02): 과도한 스캔 방지 상한.
 _MAX_FILES = 2000
@@ -114,6 +119,36 @@ class LocalCodeScanner:
             )
         return request.model_copy(update={"sections": new_sections})
 
+    def inject_practical(self, request: PracticalMaterialRequest) -> PracticalMaterialRequest:
+        """실전 교재 섹션에 매칭된 로컬 코드 예제를 주입한다."""
+        if not any(section.local_code_integration is None for section in request.sections):
+            return request
+
+        symbols = self._collect_symbols()
+        if not symbols:
+            return request
+
+        used: set[str] = set()
+        new_sections: list[PracticalStudySection] = []
+        for section in request.sections:
+            if section.local_code_integration is not None:
+                new_sections.append(section)
+                continue
+            best = self._best_match_practical(section, symbols, used)
+            if best is None:
+                new_sections.append(section)
+                continue
+            used.add(best.location)
+            new_sections.append(
+                section.model_copy(
+                    update={
+                        "local_code_integration": best.source,
+                        "code_source": best.location,
+                    }
+                )
+            )
+        return request.model_copy(update={"sections": new_sections})
+
     # --- 내부 구현 ---
 
     def _collect_symbols(self) -> list[_Symbol]:
@@ -202,6 +237,26 @@ class LocalCodeScanner:
                 continue
             score = len(query & symbol.haystack)
             # 심볼명이 섹션 제목 토큰과 겹치면 가중치를 더한다.
+            if heading_tokens & _tokenize(symbol.name):
+                score += 2
+            if score > best_score:
+                best_score = score
+                best = symbol
+        return best
+
+    def _best_match_practical(
+        self, section: PracticalStudySection, symbols: list[_Symbol], used: set[str]
+    ) -> _Symbol | None:
+        query = (_tokenize(section.heading) | _tokenize(section.intro)) - _STOPWORDS
+        if not query:
+            return None
+        heading_tokens = _tokenize(section.heading)
+        best: _Symbol | None = None
+        best_score = 0
+        for symbol in symbols:
+            if symbol.location in used:
+                continue
+            score = len(query & symbol.haystack)
             if heading_tokens & _tokenize(symbol.name):
                 score += 2
             if score > best_score:

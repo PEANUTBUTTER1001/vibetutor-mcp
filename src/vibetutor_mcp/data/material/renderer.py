@@ -12,9 +12,10 @@ from __future__ import annotations
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from vibetutor_mcp.domain.material.model import MaterialRequest
+from vibetutor_mcp.domain.material.model import MaterialRequest, PracticalMaterialRequest
 
 _TEMPLATE_NAME = "material.html.j2"
+_PRACTICAL_TEMPLATE_NAME = "practical_material.html.j2"
 
 
 class JinjaMaterialRenderer:
@@ -36,6 +37,23 @@ class JinjaMaterialRenderer:
         식별자로 노출된다(NFR-10).
         """
         template = self._env.get_template(_TEMPLATE_NAME)
+        return template.render(
+            topic=request.topic_title,
+            sections=request.sections,
+            generated_at=generated_at,
+            content_hash=content_hash,
+        )
+
+    def render_practical(
+        self, request: PracticalMaterialRequest, generated_at: str, content_hash: str
+    ) -> str:
+        """10단계 실전 교재 HTML 문자열을 반환한다.
+
+        비결정적 값(``generated_at``)은 렌더러 내부에서 만들지 않고 호출자(UseCase)가
+        ``Clock`` 으로 결정해 주입한다. ``content_hash`` 는 표지 콜로폰에 표기되어 재현성
+        식별자로 노출된다(NFR-10).
+        """
+        template = self._env.get_template(_PRACTICAL_TEMPLATE_NAME)
         return template.render(
             topic=request.topic_title,
             sections=request.sections,
