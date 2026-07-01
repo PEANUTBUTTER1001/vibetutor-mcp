@@ -44,13 +44,14 @@ def register_markdown_tools(mcp: FastMCP, use_case: GeneratePracticalMaterialUse
           ### 1. 들어가며
           ### 2. 학습 목표
           ### 3. 핵심 이론 비교표
-          ### 4. 핵심 코드 분석
-          ### 5. 마주친 문제와 디버깅
-          ### 6. 실무 연동 팁
-          ### 7. 심화 학습
-          ### 8. Q&A 표
-          ### 9. 용어 사전
-          ### 10. 공식 링크
+          ### 4. 핵심 이론 설명
+          ### 5. 핵심 코드 분석
+          ### 6. 마주친 문제와 디버깅
+          ### 7. 실무 연동 팁
+          ### 8. 심화 학습
+          ### 9. Q&A 표
+          ### 10. 용어 사전
+          ### 11. 공식 링크
         """
         fmt = ExportFormat(output_format)
         try:

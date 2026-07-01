@@ -1,7 +1,7 @@
 # VibeTutor MCP
 
 > **내가 실제로 쓴 코드** 위에 학습 개념을 붙여 설명하는 AI 튜터 MCP 서버.
-> 로컬 코드를 분석하여 일관된 양식의 **맞춤형 실습 교재(PDF)**를 자동 생성하고 검색 가능한 개인 학습 자산으로 누적합니다.
+> 로컬 코드를 분석하여 일관된 양식의 **맞춤형 실습 교재(PDF/HTML/Markdown)**를 자동 생성하고 검색 가능한 개인 학습 자산으로 누적합니다.
 
 ---
 
@@ -24,14 +24,15 @@
 
 ## 주요 기능
 
-| 기능              | 설명                                           |
-|-----------------|----------------------------------------------|
-| **맞춤형 교재 생성**   | 로컬 코드를 AST로 스캔하여 실제 코드 예제가 삽입된 PDF 교재를 생성    |
-| **표준 교재 양식 강제** | 마크다운 입력을 표준 양식으로 변환하여 누가/언제 만들어도 일관된 교재 출력   |
-| **한글 PDF 출력**   | Pretendard 폰트 임베딩으로 한글이 깨지지 않는 인쇄용 PDF       |
-| **학습 자산 인덱싱**   | SQLite에 교재 메타데이터를 누적, 제목 부분일치로 검색 가능         |
-| **재현성 보장**      | 콘텐츠 해시(SHA-256)로 동일 입력 → 동일 PDF 보장           |
-| **실패 진단**       | 각 처리 단계(스캔 → 렌더 → PDF → 저장) 실패 시 단계·원인·힌트 제공 |
+| 기능              | 설명                                                          |
+|-----------------|-------------------------------------------------------------|
+| **다중 포맷 출력**    | PDF(인쇄·배포용) · HTML(웹 열람용, 변환 비용 없음) · Markdown(원문 보존용) 중 선택 생성 |
+| **맞춤형 교재 생성**   | 로컬 코드를 AST로 스캔하여 실제 코드 예제가 삽입된 교재를 생성                        |
+| **표준 교재 양식 강제** | 마크다운 입력을 표준 양식으로 변환하여 누가/언제 만들어도 일관된 교재 출력                   |
+| **한글 PDF 출력**   | Pretendard 폰트 임베딩으로 한글이 깨지지 않는 인쇄용 PDF                       |
+| **학습 자산 인덱싱**   | SQLite에 교재 메타데이터를 누적, 제목 부분일치로 검색 가능                        |
+| **재현성 보장**      | 콘텐츠 해시(SHA-256)로 동일 입력 → 동일 산출물 보장                          |
+| **실패 진단**       | 각 처리 단계(스캔 → 렌더 → 변환 → 저장) 실패 시 단계·원인·힌트 제공                 |
 
 ---
 
@@ -56,7 +57,7 @@
 1. 저장소 클론
 
 ```cmd
-git clone https://github.com/PEANTUBUTTER1001/vibetutor-mcp.git
+git clone https://github.com/PEANUTBUTTER1001/vibetutor-mcp.git
 cd vibetutor-mcp
 ```
 
@@ -150,18 +151,51 @@ VibeTutor MCP는 **stdio 전송**으로 동작합니다. Claude Desktop 또는 �
 
 #### Tool — `Generate book from markdown`
 
-마크다운 텍스트를 입력받아 한글 PDF 교재를 생성합니다. 생성된 교재는 `output/` 폴더에 저장되고 SQLite에 메타데이터가 기록됩니다.
+마크다운 텍스트를 입력받아 통 교재를 생성합니다. `output_format` 파라미터로 산출물 포맷을 선택하며,
+생성된 교재는 `output/` 폴더에 저장되고 SQLite에 메타데이터가 기록됩니다.
+
+**출력 포맷 (`output_format`)**
+
+| 값                | 설명                                          | Docker 필요 여부 |
+|-------------------|-----------------------------------------------|----------------|
+| `pdf` (기본값)      | 인쇄·배포용 완성 교재. 한글 폰트 임베딩, 표지·콜로폰 포함           | 필요             |
+| `html`            | 웹에서 바로 열어보는 교재. PDF와 동일 레이아웃, 변환 비용 없음       | 불필요            |
+| `markdown`        | PDF 변환 전 단계의 원본 마크다운을 그대로 저장. 빠른 텍스트·토큰 절약  | 불필요            |
+
+포맷을 명시하지 않고 "교재 만들어줘"라고만 요청하면, Claude가 임의로 기본값(PDF)을 선택하지 않고
+먼저 어떤 포맷으로 만들지 되물어봅니다(예: "PDF, HTML, Markdown 중 어떤 형식으로 만들어 드릴까요?").
+대답으로 포맷을 지정하면 그에 맞춰 이 도구가 호출됩니다.
+
+**마크다운 작성 규칙**
+
+챕터는 `# 01장. 챕터 제목` 형태로 시작하며, 각 챕터는 아래 11개 서브섹션으로 구성됩니다.
+
+```
+### 1. 들어가며
+### 2. 학습 목표
+### 3. 핵심 이론 비교표
+### 4. 핵심 이론 설명
+### 5. 핵심 코드 분석
+### 6. 마주친 문제와 디버깅
+### 7. 실무 연동 팁
+### 8. 심화 학습
+### 9. Q&A 표
+### 10. 용어 사전
+### 11. 공식 링크
+```
 
 **사용 예시:**
 
 ```
-여기서 채팅한 내용을 토대로 교재로 만들어줘
+여기서 채팅한 내용을 토대로 HTML 교재로 만들어줘
 ```
 
-**출력 예시:**
+**출력 예시 (포맷별):**
 
 ```
-교재 생성 완료 → output/프로젝트_기초.pdf (id=42, hash=a1b2c3d4)
+통교재 생성 완료(pdf) → output/프로젝트_기초.pdf (id=42, hash=a1b2c3d4)
+통교재 생성 완료(html) → output/프로젝트_기초.html (id=43, hash=b2c3d4e5)
+통교재 생성 완료(markdown) → output/프로젝트_기초.md (id=44, hash=c3d4e5f6)
 ```
 
 ---
@@ -214,15 +248,15 @@ vibetutor-mcp/
 │   │   └── security.py          # 경로 안전 검증 · 민감 파일 차단
 │   ├── domain/material/         # 순수 Python 도메인 (프레임워크 의존 없음)
 │   │   ├── model.py             # StudySection · MaterialRequest · StudyMaterial
-│   │   ├── ports.py             # 인터페이스 (CodeScanner / MaterialRenderer / PdfExporter)
+│   │   ├── ports.py             # 인터페이스 (PracticalMaterialRenderer / MaterialExporter / Clock)
 │   │   ├── repository.py        # Repository 인터페이스
 │   │   ├── usecase.py           # GenerateTutorMaterialUseCase
 │   │   ├── query.py             # Search · List · Get UseCase
 │   │   └── hashing.py           # SHA-256 콘텐츠 해시
 │   ├── data/material/           # 인터페이스 구현체
-│   │   ├── scanner.py           # LocalCodeScanner (AST 코드 추출)
 │   │   ├── renderer.py          # JinjaMaterialRenderer
-│   │   ├── exporter.py          # WeasyPrintExporter (한글 PDF 변환)
+│   │   ├── markdown_parser.py   # 마크다운 → PracticalMaterialRequest 파서
+│   │   ├── exporter.py          # FormatRouterExporter (PDF/HTML/Markdown 라우팅)
 │   │   ├── repository_impl.py   # SqliteMaterialRepository
 │   │   └── db.py                # SQLAlchemy 엔티티
 │   └── presentation/
@@ -230,13 +264,15 @@ vibetutor-mcp/
 │       ├── tools/               # @mcp.tool (generate · search · markdown)
 │       └── resources/           # @mcp.resource vibetutor://materials
 ├── templates/
-│   ├── material.html.j2         # 교재 Jinja2 템플릿
+│   ├── practical_material.html.j2  # 10단계 실전 교재 Jinja2 템플릿
 │   ├── styles/                  # tokens.css · components.css
 │   └── fonts/                   # Pretendard TTF/OTF (SIL OFL 1.1)
 ├── tests/
 │   ├── test_scaffolding.py      # 아키텍처 규칙 검증
 │   ├── test_pipeline.py         # 단위 · 통합 테스트
 │   ├── test_e2e.py              # 전구간 E2E + 재현성
+│   ├── test_export_formats.py   # 포맷별(PDF/HTML/Markdown) 내보내기 테스트
+│   ├── test_practical.py        # 10단계 실전 교재 파이프라인 테스트
 │   ├── test_search_material.py  # 검색 테스트
 │   └── test_resources.py        # Resource 테스트
 ├── scripts/
