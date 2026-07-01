@@ -59,13 +59,6 @@ def main() -> None:
             ),
             PracticalStudySection(
                 heading="파일명 새니타이즈와 콘텐츠 해시",
-<<<<<<< HEAD
-                intro="sanitize_filename 으로 경로 탈출과 예약 문자를 무력화하고, 콘텐츠 해시로 재현성을 검증한다.",
-                concept_explanation=(
-                    "sanitize_filename 은 경로 구분자·상위 참조를 제거해 경로 탈출을 막는다. "
-                    "content_hash 는 format/source_markdown 을 제외해 포맷 무관 콘텐츠 동일성을 보장한다."
-                ),
-=======
                 intro=(
                     "sanitize_filename 으로 경로 탈출과 예약 문자를 무력화하고, "
                     "콘텐츠 해시로 재현성을 검증한다."
@@ -75,7 +68,6 @@ def main() -> None:
                     "content_hash 는 format/source_markdown 을 제외해 "
                     "포맷 무관 콘텐츠 동일성을 보장한다."
                 ),
->>>>>>> 65e07a3 (feat(material): 공식 링크 하이퍼텍스트화 및 핵심 이론 설명 챕터 추가)
                 code_analysis="content_hash = compute_content_hash(request)",
             ),
         ],

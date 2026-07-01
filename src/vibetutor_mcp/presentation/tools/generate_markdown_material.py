@@ -29,12 +29,8 @@ def register_markdown_tools(mcp: FastMCP, use_case: GeneratePracticalMaterialUse
 
         [중요: 출력 포맷 확인 필수]
         사용자가 '교재 만들어줘'라고 요청할 때 특정 포맷(PDF, HTML, Markdown)을 명시하지 않았다면,
-<<<<<<< HEAD
-        임의로 기본값을 선택해서 툴을 호출하지 말고 **반드시 먼저 사용자에게 어떤 포맷으로 생성할지 물어보십시오.**
-=======
         임의로 기본값을 선택해서 툴을 호출하지 말고
         **반드시 먼저 사용자에게 어떤 포맷으로 생성할지 물어보십시오.**
->>>>>>> 65e07a3 (feat(material): 공식 링크 하이퍼텍스트화 및 핵심 이론 설명 챕터 추가)
         (예: "PDF, HTML, Markdown 중 어떤 형식으로 교재를 만들어 드릴까요?")
         사용자가 대답으로 포맷을 지정하면 그에 맞춰 `output_format`을 설정하여 이 툴을 호출하십시오.
 

@@ -91,14 +91,10 @@ def _parse_single_chapter(fallback_title: str, block: str) -> PracticalStudySect
             ]
         elif any(k in header_text for k in ["비교", "아키텍처", "Architecture"]):
             architecture_comparison = _parse_comparison_table(body_lines)
-<<<<<<< HEAD
-        elif any(k in header_text for k in ["이론 설명", "개념 설명", "사전지식", "배경지식", "핵심 이론", "개념"]):
-=======
         elif any(
             k in header_text
             for k in ["이론 설명", "개념 설명", "사전지식", "배경지식", "핵심 이론", "개념"]
         ):
->>>>>>> 65e07a3 (feat(material): 공식 링크 하이퍼텍스트화 및 핵심 이론 설명 챕터 추가)
             concept_explanation = body_text
         elif any(k in header_text for k in ["코드", "분석", "Code"]):
             code_analysis = _extract_code_block(body_text)
@@ -116,9 +112,6 @@ def _parse_single_chapter(fallback_title: str, block: str) -> PracticalStudySect
             qna = _parse_qna_table(body_lines)
         elif any(k in header_text for k in ["용어", "Glossary"]):
             glossary = _parse_glossary(body_lines)
-<<<<<<< HEAD
-        elif any(k in header_text for k in ["링크", "공식", "Reference", "문서", "레퍼런스", "참고자료", "참고 자료", "URL"]):
-=======
         elif any(
             k in header_text
             for k in [
@@ -132,7 +125,6 @@ def _parse_single_chapter(fallback_title: str, block: str) -> PracticalStudySect
                 "URL",
             ]
         ):
->>>>>>> 65e07a3 (feat(material): 공식 링크 하이퍼텍스트화 및 핵심 이론 설명 챕터 추가)
             official_links = _parse_official_links(body_lines)
         elif not intro:
             intro = body_text  # 분류되지 않은 첫 본문은 intro로 간주
