@@ -1,7 +1,7 @@
 [project]
 name = "vibetutor-mcp"
 version = "0.1.0"
-description = "사용자 코드 기반 맞춤형 실습 교재(PDF)를 생성하는 AI 튜터 MCP 서버"
+description = "사용자 코드 기반 맞춤형 실습 교재(PDF/HTML/Markdown)를 생성하는 AI 튜터 MCP 서버"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
