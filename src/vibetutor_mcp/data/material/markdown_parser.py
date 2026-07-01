@@ -68,7 +68,7 @@ def _parse_single_chapter(fallback_title: str, block: str) -> PracticalStudySect
     study_points: list[str] = []
     qna: list[QnAItem] = []
     glossary: list[GlossaryItem] = []
-    official_links: list[str] = []
+    official_links: list[OfficialLink] = []
 
     for sub in sub_sections:
         sub_str = sub.strip()
