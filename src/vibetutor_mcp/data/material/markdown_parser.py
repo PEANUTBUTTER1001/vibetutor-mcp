@@ -8,6 +8,7 @@ from vibetutor_mcp.domain.material.model import (
     BugBox,
     ComparisonRow,
     GlossaryItem,
+    OfficialLink,
     PracticalMaterialRequest,
     PracticalStudySection,
     QnAItem,
@@ -36,7 +37,11 @@ def parse_markdown_to_practical_request(
             if block.strip():
                 sections.append(_parse_single_chapter(topic_title, block))
 
-    return PracticalMaterialRequest(topic_title=topic_title, sections=sections)
+    # source_markdown 은 Markdown 출력 시 '원본 그대로 내보내기'(손실 0)에 사용된다.
+    # PDF/HTML 출력에는 영향이 없으며, content_hash 산출에서도 제외된다.
+    return PracticalMaterialRequest(
+        topic_title=topic_title, sections=sections, source_markdown=markdown_content
+    )
 
 
 def _parse_single_chapter(fallback_title: str, block: str) -> PracticalStudySection:
@@ -56,6 +61,7 @@ def _parse_single_chapter(fallback_title: str, block: str) -> PracticalStudySect
     intro = ""
     objectives: list[str] = []
     architecture_comparison: list[ComparisonRow] = []
+    concept_explanation = ""
     code_analysis = ""
     bug_box: list[BugBox] = []
     pro_tip = ""
@@ -83,8 +89,17 @@ def _parse_single_chapter(fallback_title: str, block: str) -> PracticalStudySect
                 for item in body_lines
                 if item.strip() and re.match(r"^[-*•\d]", item.strip())
             ]
-        elif any(k in header_text for k in ["비교", "아키텍처", "Architecture", "이론"]):
+        elif any(k in header_text for k in ["비교", "아키텍처", "Architecture"]):
             architecture_comparison = _parse_comparison_table(body_lines)
+<<<<<<< HEAD
+        elif any(k in header_text for k in ["이론 설명", "개념 설명", "사전지식", "배경지식", "핵심 이론", "개념"]):
+=======
+        elif any(
+            k in header_text
+            for k in ["이론 설명", "개념 설명", "사전지식", "배경지식", "핵심 이론", "개념"]
+        ):
+>>>>>>> 65e07a3 (feat(material): 공식 링크 하이퍼텍스트화 및 핵심 이론 설명 챕터 추가)
+            concept_explanation = body_text
         elif any(k in header_text for k in ["코드", "분석", "Code"]):
             code_analysis = _extract_code_block(body_text)
         elif any(k in header_text for k in ["버그", "디버깅", "Bug", "문제"]):
@@ -101,7 +116,23 @@ def _parse_single_chapter(fallback_title: str, block: str) -> PracticalStudySect
             qna = _parse_qna_table(body_lines)
         elif any(k in header_text for k in ["용어", "Glossary"]):
             glossary = _parse_glossary(body_lines)
-        elif any(k in header_text for k in ["링크", "공식", "Reference", "문서"]):
+<<<<<<< HEAD
+        elif any(k in header_text for k in ["링크", "공식", "Reference", "문서", "레퍼런스", "참고자료", "참고 자료", "URL"]):
+=======
+        elif any(
+            k in header_text
+            for k in [
+                "링크",
+                "공식",
+                "Reference",
+                "문서",
+                "레퍼런스",
+                "참고자료",
+                "참고 자료",
+                "URL",
+            ]
+        ):
+>>>>>>> 65e07a3 (feat(material): 공식 링크 하이퍼텍스트화 및 핵심 이론 설명 챕터 추가)
             official_links = _parse_official_links(body_lines)
         elif not intro:
             intro = body_text  # 분류되지 않은 첫 본문은 intro로 간주
@@ -111,6 +142,7 @@ def _parse_single_chapter(fallback_title: str, block: str) -> PracticalStudySect
         intro=intro or "본 챕터의 실무 핵심 내용입니다.",
         objectives=objectives,
         architecture_comparison=architecture_comparison,
+        concept_explanation=concept_explanation,
         code_analysis=code_analysis or "// 작성된 코드가 없습니다.",
         bug_box=bug_box,
         pro_tip=pro_tip or "실무 적용 시 예외 처리에 유의하세요.",
@@ -130,24 +162,40 @@ def _extract_code_block(text: str) -> str:
     return text.strip()
 
 
-def _parse_official_links(lines: list[str]) -> list[str]:
-    """공식 문서 링크를 추출한다.
+def _parse_official_links(lines: list[str]) -> list[OfficialLink]:
+    """공식 문서 링크를 (표시 텍스트, URL) 쌍으로 추출한다.
 
-    마크다운 링크 형식 ``[텍스트](URL)`` 과 순수 URL 형식 ``https://...`` 을 모두 처리한다.
-    LLM 이 두 형식을 혼용해도 URL 만 정확히 뽑아낸다.
+    다음 세 가지 형식을 모두 처리한다:
+    - ``[텍스트](URL)`` 마크다운 링크 → text="텍스트", url=URL
+    - ``텍스트: https://...`` 혼합 형식 → text="텍스트", url=URL
+    - ``https://...`` 순수 URL → text=도메인명, url=URL
     """
-    links: list[str] = []
+    from urllib.parse import urlparse
+
+    links: list[OfficialLink] = []
     for line in lines:
         raw = re.sub(r"^[-*•\d.]+\s*", "", line).strip()
         if not raw:
             continue
-        # [텍스트](URL) 형식에서 URL 추출
-        md_match = re.search(r"\[.*?\]\((https?://[^)]+)\)", raw)
+        # 1순위: [텍스트](URL) 마크다운 링크
+        md_match = re.search(r"\[(.+?)\]\((https?://[^)]+)\)", raw)
         if md_match:
-            links.append(md_match.group(1).strip())
-        elif re.match(r"https?://", raw):
-            links.append(raw)
-        # 기타 텍스트(설명 줄 등)는 무시
+            links.append(
+                OfficialLink(text=md_match.group(1).strip(), url=md_match.group(2).strip())
+            )
+            continue
+        # 2순위: URL 이 포함된 행(순수 URL 또는 "텍스트: URL" 혼합)
+        url_match = re.search(r"(https?://\S+)", raw)
+        if url_match:
+            url = url_match.group(1).rstrip(".,;)")
+            text_part = raw[: url_match.start()].strip().rstrip(":- \t").strip()
+            if text_part:
+                text = text_part
+            else:
+                # 순수 URL → 도메인만 표시 텍스트로 사용
+                parsed = urlparse(url)
+                text = parsed.netloc or url
+            links.append(OfficialLink(text=text, url=url))
     return links
 
 
@@ -205,9 +253,27 @@ def _parse_qna_table(lines: list[str]) -> list[QnAItem]:
 
 
 def _parse_bug_box(lines: list[str]) -> list[BugBox]:
+    """Bug Box 항목을 파싱한다.
+
+    지원 형식:
+    - 다중 행: ``[증상]`` / ``[원인]`` / ``[해결]`` 각 별도 행
+    - 단일 행: ``[증상] ... / [원인] ... / [해결] ...`` 한 줄에 ``/`` 로 구분
+    """
     bugs: list[BugBox] = []
-    curr_symptom, curr_cause, curr_solution = "", "", ""
+
+    # 단일 행 형식 "[증상] ... / [원인] ... / [해결] ..." 을 개별 행으로 분리한다.
+    # " / [" 를 기준으로 나눠 각 토큰이 독립 행처럼 처리되도록 한다.
+    expanded: list[str] = []
     for line in lines:
+        stripped = line.strip()
+        if "[증상]" in stripped and ("[원인]" in stripped or "[해결]" in stripped):
+            parts = re.split(r"\s*/\s*(?=\[)", stripped)
+            expanded.extend(parts)
+        else:
+            expanded.append(line)
+
+    curr_symptom, curr_cause, curr_solution = "", "", ""
+    for line in expanded:
         line_str = line.strip()
         if "증상" in line_str:
             if curr_symptom:

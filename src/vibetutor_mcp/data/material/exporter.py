@@ -1,35 +1,53 @@
-"""WeasyPrint 기반 ``PdfExporter`` 구현체.
+"""다중 포맷 ``MaterialExporter`` 구현체(``FormatRouterExporter``).
 
-HTML 교재를 PDF 로 변환·저장한다. PDF 생성의 3대 필수 선행 조건을 강제한다:
-권한 검증 → 덮어쓰기 방지 → 한글 폰트 임베딩(SKILLS.md §6, SRS FR-07·FR-08·FR-09).
-또한 임시 파일에 렌더링한 뒤 ``os.replace`` 로 원자적으로 확정하여, 중간 실패 시
-부분(깨진) PDF 가 남지 않도록 한다(NFR-06).
+렌더링된 컨텐츠를 선택한 포맷으로 저장한다. 포맷과 무관하게 파일 안전 3원칙을 동일하게
+강제한다: 권한 검증 → 덮어쓰기 방지 → 원자적 쓰기(SKILLS.md §6, SRS FR-07·FR-13·NFR-06).
 
-WeasyPrint 는 네이티브 의존성(Pango/cairo/GDK-PixBuf)을 요구하므로 모듈 import
-시점이 아니라 ``export`` 호출 시점에 **지연 import** 한다. 이렇게 하면 PDF 기능을
-제외한 서버 전체는 네이티브 의존성 없이도 부팅·테스트된다.
+- ``PDF``: WeasyPrint 변환(한글 폰트 ``@font-face`` 는 ``base_url=font_dir`` 로 해석).
+- ``HTML`` / ``MARKDOWN``: 렌더된 문자열을 UTF-8 텍스트로 그대로 기록.
+
+WeasyPrint 는 네이티브 의존성(Pango/cairo/GDK-PixBuf)을 요구하므로 모듈 import 시점이
+아니라 PDF export 시점에 **지연 import** 한다. 이렇게 하면 PDF 를 제외한 서버 전체(및
+HTML/Markdown export)는 네이티브 의존성 없이도 부팅·테스트된다.
 """
 
 from __future__ import annotations
 
 import os
+from collections.abc import Callable
 from pathlib import Path
 
 from vibetutor_mcp.core.exceptions import OverwriteError, PermissionDeniedError
 from vibetutor_mcp.core.security import sanitize_filename
+from vibetutor_mcp.domain.material.model import ExportFormat
+
+# 포맷별 파일 확장자.
+_EXTENSIONS: dict[ExportFormat, str] = {
+    ExportFormat.PDF: "pdf",
+    ExportFormat.HTML: "html",
+    ExportFormat.MARKDOWN: "md",
+}
 
 
-class WeasyPrintExporter:
-    """HTML 교재를 PDF 로 변환·저장한다(권한·덮어쓰기 방지·원자적 쓰기·한글 임베딩)."""
+class FormatRouterExporter:
+    """컨텐츠를 포맷별로 분기 저장한다(권한·덮어쓰기 방지·원자적 쓰기 공통)."""
 
     def __init__(self, output_dir: str, font_dir: str) -> None:
         self._out = Path(output_dir)
         self._font_dir = Path(font_dir)
 
-    def export(self, topic: str, html: str) -> str:
-        """교재 HTML 을 PDF 로 저장하고 저장된 절대 경로(str)를 반환한다."""
-        from weasyprint import HTML  # 지연 import: 네이티브 의존성 격리
+    def export(self, topic: str, content: str, fmt: ExportFormat) -> str:
+        """컨텐츠를 선택한 포맷으로 저장하고 저장된 절대 경로(str)를 반환한다."""
+        target = self._prepare_target(topic, fmt)
+        if fmt is ExportFormat.PDF:
+            self._atomic_write(target, lambda tmp: self._write_pdf(content, tmp))
+        else:
+            # HTML/Markdown 은 변환 없이 렌더된 문자열을 그대로 UTF-8 로 기록.
+            self._atomic_write(target, lambda tmp: tmp.write_text(content, encoding="utf-8"))
+        return str(target)
 
+    def _prepare_target(self, topic: str, fmt: ExportFormat) -> Path:
+        """출력 디렉터리 권한을 검증하고, 충돌하지 않는 안전한 대상 경로를 만든다."""
         # 1) 권한 검증: 출력 디렉터리 보장 + 쓰기 가능 확인.
         try:
             self._out.mkdir(parents=True, exist_ok=True)
@@ -39,17 +57,25 @@ class WeasyPrintExporter:
             raise PermissionDeniedError(f"출력 디렉터리에 쓰기 권한이 없음: {self._out}")
 
         # 2) 덮어쓰기 방지: 파일명 안전화(FR-13) 후 대상 충돌 시 즉시 중단.
-        target = self._out / f"{sanitize_filename(topic)}.pdf"
+        target = self._out / f"{sanitize_filename(topic)}.{_EXTENSIONS[fmt]}"
         if target.exists():
             raise OverwriteError(f"이미 존재하는 교재 파일: {target}")
+        return target
 
-        # 3) 원자적 쓰기 + 한글 폰트 임베딩(@font-face 는 base_url=font_dir 로 해석).
+    @staticmethod
+    def _atomic_write(target: Path, writer: Callable[[Path], object]) -> None:
+        """임시 ``.part`` 파일에 쓴 뒤 ``os.replace`` 로 원자적으로 확정한다(NFR-06)."""
         tmp = target.with_name(target.name + ".part")
         try:
-            HTML(string=html, base_url=str(self._font_dir)).write_pdf(str(tmp))
+            writer(tmp)
             os.replace(tmp, target)
         finally:
-            # 변환 실패로 임시 파일이 남았다면 정리(성공 시 replace 로 이미 사라짐).
+            # 쓰기 실패로 임시 파일이 남았다면 정리(성공 시 replace 로 이미 사라짐).
             if tmp.exists():
                 tmp.unlink(missing_ok=True)
-        return str(target)
+
+    def _write_pdf(self, html: str, tmp: Path) -> None:
+        """HTML 을 PDF 로 변환해 임시 파일에 쓴다(한글 폰트 임베딩 포함)."""
+        from weasyprint import HTML  # 지연 import: 네이티브 의존성 격리
+
+        HTML(string=html, base_url=str(self._font_dir)).write_pdf(str(tmp))

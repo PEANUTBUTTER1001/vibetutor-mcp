@@ -9,35 +9,24 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
 # ──────────────────────────────────────────────────────────────
-# 표준 교재 모델
+# 출력 포맷
 # ──────────────────────────────────────────────────────────────
 
 
-class StudySection(BaseModel):
-    """교재의 단일 학습 섹션. 입력 양식 강제(방식 A)를 위한 경계 스키마."""
+class ExportFormat(StrEnum):
+    """교재 산출물 포맷. 도메인 enum 이므로 UseCase 분기에 사용해도 무방하다.
 
-    heading: str = Field(..., min_length=1, description="단원 제목")
-    concept_explanation: str = Field(..., min_length=1, description="개념 설명 본문")
-    # 이론 중심 교재도 지원하기 위해 코드/연습문제는 Optional 로 둔다.
-    code_example: str | None = Field(default=None, description="실제 코드 예제(선택)")
-    exercises: str | None = Field(default=None, description="연습 문제(선택)")
-    # 스캐너가 주입한 코드의 출처(파일·라인). 자동 생성 초안의 출처 표기 의무(SRS §8.1, FR-15).
-    code_source: str | None = Field(
-        default=None, description="주입된 코드 예제의 출처(예: src/foo.py:12-20)"
-    )
+    ``StrEnum`` 으로 ``model_dump`` 직렬화/JSON 스키마에서 평탄한 문자열로 노출된다.
+    """
 
-
-class MaterialRequest(BaseModel):
-    """교재 생성 요청. Tool 입력 스키마로 사용되어 경계에서 검증된다."""
-
-    topic_title: str = Field(..., min_length=1, description="교재 주제 제목")
-    sections: list[StudySection] = Field(
-        default_factory=list, description="교재를 구성하는 학습 섹션 목록"
-    )
+    PDF = "pdf"
+    HTML = "html"
+    MARKDOWN = "markdown"
 
 
 # ──────────────────────────────────────────────────────────────
@@ -75,6 +64,13 @@ class GlossaryItem(BaseModel):
     definition: str = Field(default="", description="정의")
 
 
+class OfficialLink(BaseModel):
+    """공식 문서 링크 단일 항목."""
+
+    text: str = Field(..., min_length=1, description="링크 표시 텍스트")
+    url: str = Field(..., min_length=1, description="링크 URL")
+
+
 class PracticalStudySection(BaseModel):
     """10단계 실전 교재의 단일 챕터."""
 
@@ -82,6 +78,7 @@ class PracticalStudySection(BaseModel):
     intro: str = Field(default="", description="들어가며")
     objectives: list[str] = Field(default_factory=list)
     architecture_comparison: list[ComparisonRow] = Field(default_factory=list)
+    concept_explanation: str = Field(default="", description="코드 이해를 위한 핵심 이론·개념 설명")
     code_analysis: str = Field(default="", description="주석으로 읽는 핵심 코드 분석")
     local_code_integration: str | None = Field(default=None)
     code_source: str | None = Field(default=None)
@@ -90,14 +87,26 @@ class PracticalStudySection(BaseModel):
     study_points: list[str] = Field(default_factory=list)
     qna: list[QnAItem] = Field(default_factory=list)
     glossary: list[GlossaryItem] = Field(default_factory=list)
-    official_links: list[str] = Field(default_factory=list)
+    official_links: list[OfficialLink] = Field(default_factory=list)
 
 
 class PracticalMaterialRequest(BaseModel):
-    """10단계 실전 교재 생성 요청."""
+    """10단계 실전 교재 생성 요청.
+
+    ``format`` 으로 산출물 포맷(PDF/HTML/Markdown)을 선택한다. ``source_markdown`` 은
+    Markdown 출력 시 **손실 없는 원문 그대로 내보내기**를 위해 파서가 동봉하는 원본
+    마크다운이다(파싱→재렌더의 손실을 피한다). 두 필드는 '출력 방법'에 대한 메타데이터로,
+    콘텐츠 동일성(content_hash) 산출에서는 제외된다.
+    """
 
     topic_title: str = Field(..., min_length=1, description="교재 주제 제목")
     sections: list[PracticalStudySection] = Field(default_factory=list)
+    format: ExportFormat = Field(
+        default=ExportFormat.PDF, description="산출물 포맷(pdf/html/markdown)"
+    )
+    source_markdown: str | None = Field(
+        default=None, description="Markdown 출력용 원본 마크다운(파서가 동봉)"
+    )
 
 
 # ──────────────────────────────────────────────────────────────
