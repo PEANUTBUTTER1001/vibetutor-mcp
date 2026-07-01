@@ -1,1 +1,1 @@
-"""교재(material) data 구현체: db / repository_impl / renderer / exporter / scanner."""
+"""교재(material) data 구현체: db / repository_impl / renderer / exporter / markdown_parser."""

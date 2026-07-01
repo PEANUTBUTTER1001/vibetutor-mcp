@@ -1,19 +1,22 @@
 """스캐폴딩 검증 테스트.
 
-서버 부팅, 입력 스키마 강제, 의존성 역전(Domain 무의존), 스텁 동작을 확인한다.
+서버 부팅, 입력 스키마 강제, 의존성 역전(Domain 무의존)을 확인한다.
 """
 
 from __future__ import annotations
 
 import importlib
 import pkgutil
-from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
 import vibetutor_mcp.domain as domain_pkg
-from vibetutor_mcp.domain.material.model import MaterialRequest, StudySection
+from vibetutor_mcp.domain.material.model import (
+    ExportFormat,
+    PracticalMaterialRequest,
+    PracticalStudySection,
+)
 from vibetutor_mcp.main import build
 
 
@@ -25,38 +28,24 @@ def test_build_returns_fastmcp_server() -> None:
     assert isinstance(server, FastMCP)
 
 
-def test_material_request_accepts_empty_sections() -> None:
-    """빈 섹션 목록은 허용된다 (시나리오 #4)."""
-    req = MaterialRequest(topic_title="파이썬 기초", sections=[])
+def test_practical_request_accepts_empty_sections_and_defaults() -> None:
+    """빈 섹션 목록은 허용되며, 포맷 기본값은 PDF 다 (시나리오 #1·#4)."""
+    req = PracticalMaterialRequest(topic_title="파이썬 기초", sections=[])
     assert req.topic_title == "파이썬 기초"
     assert req.sections == []
+    assert req.format is ExportFormat.PDF  # 미지정 시 안전 기본값
+    assert req.source_markdown is None
 
 
-def test_study_section_optional_code_and_exercises() -> None:
-    """code_example / exercises 는 선택값이다 (이론 중심 교재 지원)."""
-    section = StudySection(heading="제목", concept_explanation="설명")
-    assert section.code_example is None
-    assert section.exercises is None
-
-
-def test_study_section_rejects_blank_heading() -> None:
+def test_practical_section_rejects_blank_heading() -> None:
     """필수 필드 누락/공백은 ValidationError 로 차단된다 (시나리오 #5)."""
     with pytest.raises(ValidationError):
-        StudySection(heading="", concept_explanation="설명")
+        PracticalStudySection(heading="")
 
 
-def test_scanner_returns_request_without_error(tmp_path: Path) -> None:
-    """MVP 2단계: 스캐너는 더 이상 NotImplementedError 를 던지지 않고 요청을 반환한다."""
-    from vibetutor_mcp.data.material.scanner import LocalCodeScanner
-
-    scanner = LocalCodeScanner(project_root=str(tmp_path))
-    request = MaterialRequest(
-        topic_title="t",
-        sections=[StudySection(heading="제목", concept_explanation="설명")],
-    )
-    result = scanner.inject_examples(request)
-    assert isinstance(result, MaterialRequest)
-    assert len(result.sections) == 1
+def test_export_format_has_three_values() -> None:
+    """출력 포맷 enum 은 pdf/html/markdown 세 가지를 노출한다."""
+    assert {fmt.value for fmt in ExportFormat} == {"pdf", "html", "markdown"}
 
 
 def test_domain_has_no_framework_imports() -> None:

@@ -28,6 +28,9 @@ def register_prompts(mcp: FastMCP) -> None:
             "| 비교 항목 | 기존 방식 | 현대적 방식 |\n"
             "|---|---|---|\n"
             "| 항목명 | 기존 설명 | 현대 설명 |\n\n"
+            "### 핵심 이론 설명\n"
+            "코드 분석 전에 반드시 이해해야 할 개념·원리를 서술한다.\n"
+            "독자가 코드를 읽기 전에 '왜 이 구조인가'를 이해할 수 있도록 설명한다.\n\n"
             "### 핵심 코드 분석\n"
             "⚠️ 반드시 코드 한 줄(또는 블록)마다 동작 원리를 설명하는 주석을 달아야 한다.\n"
             "주석 없는 순수 코드만 작성하면 안 된다. 아래 형식을 따른다:\n"
@@ -54,5 +57,7 @@ def register_prompts(mcp: FastMCP) -> None:
             "### 공식 문서 링크\n"
             "- https://...\n\n"
             "---\n"
-            "마크다운 작성 완료 후 generate_book_from_markdown 도구로 PDF 를 생성한다."
+            "마크다운 작성 완료 후 generate_book_from_markdown 도구를 호출한다.\n"
+            "사용자가 원하는 포맷에 맞춰 output_format 을 지정한다"
+            "(pdf=기본, html=웹, markdown=원본 텍스트)."
         )

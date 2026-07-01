@@ -72,6 +72,12 @@
       </table>
       {% endif %}
 
+      {# 3.5. 핵심 이론 설명 #}
+      {% if section.concept_explanation %}
+      <h3>핵심 이론 설명</h3>
+      <div class="quote">{{ section.concept_explanation }}</div>
+      {% endif %}
+
       {# 4. 주석으로 읽는 핵심 코드 분석 #}
       {% if section.code_analysis %}
       <h3>주석으로 읽는 핵심 코드 분석</h3>
@@ -153,7 +159,7 @@
       <h3>공식 레퍼런스 문서</h3>
       <ul>
         {% for link in section.official_links %}
-        <li><a href="{{ link }}">{{ link }}</a></li>
+        <li><a href="{{ link.url }}" target="_blank" rel="noopener noreferrer">{{ link.text }}</a></li>
         {% endfor %}
       </ul>
       {% endif %}
