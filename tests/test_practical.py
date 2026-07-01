@@ -9,6 +9,7 @@ from vibetutor_mcp.domain.material.model import (
     BugBox,
     ComparisonRow,
     GlossaryItem,
+    OfficialLink,
     PracticalMaterialRequest,
     PracticalStudySection,
     QnAItem,
@@ -53,7 +54,9 @@ def test_practical_renderer_renders_all_submodels() -> None:
                         term="Recomposition", definition="상태 변경 시 UI를 다시 그리는 과정"
                     )
                 ],
-                official_links=["https://developer.android.com"],
+                official_links=[
+                    OfficialLink(text="Android Developers", url="https://developer.android.com")
+                ],
             )
         ],
     )
