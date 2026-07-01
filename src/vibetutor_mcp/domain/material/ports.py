@@ -9,48 +9,41 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from .model import MaterialRequest, PracticalMaterialRequest
-
-
-class CodeScanner(Protocol):
-    """로컬 프로젝트 코드를 스캔해 섹션에 실제 예제를 주입한다."""
-
-    def inject_examples(self, request: MaterialRequest) -> MaterialRequest:
-        """요청을 받아 코드 예제가 보강된 새 요청을 반환한다."""
-        ...
-
-
-class MaterialRenderer(Protocol):
-    """검증된 요청을 교재 HTML 문자열로 렌더링한다(예: Jinja2)."""
-
-    def render(self, request: MaterialRequest, generated_at: str, content_hash: str) -> str:
-        """렌더링된 HTML 문자열을 반환한다.
-
-        ``generated_at`` (표지 작성일자)·``content_hash`` (재현성 식별자)는 비결정적
-        값을 렌더러 내부에서 만들지 않도록 호출자(UseCase)가 결정해 주입한다(NFR-10).
-        """
-        ...
+from .model import ExportFormat, PracticalMaterialRequest
 
 
 class PracticalMaterialRenderer(Protocol):
-    """10단계 실전 교재 요청을 HTML 문자열로 렌더링한다."""
+    """10단계 실전 교재 요청을 출력 컨텐츠 문자열로 렌더링한다."""
 
     def render_practical(
         self, request: PracticalMaterialRequest, generated_at: str, content_hash: str
     ) -> str:
-        """렌더링된 실전 교재 HTML 문자열을 반환한다.
+        """렌더링된 실전 교재 HTML 문자열을 반환한다(PDF/HTML 공용).
 
         ``generated_at`` (표지 작성일자)·``content_hash`` (재현성 식별자)는 비결정적
         값을 렌더러 내부에서 만들지 않도록 호출자(UseCase)가 결정해 주입한다(NFR-10).
         """
         ...
 
+    def render_markdown(self, source_markdown: str, generated_at: str, content_hash: str) -> str:
+        """Markdown 출력 컨텐츠를 반환한다.
 
-class PdfExporter(Protocol):
-    """HTML 을 PDF 로 변환·저장하고 저장 경로를 반환한다(예: WeasyPrint)."""
+        PDF 변환 전 단계의 **원본 마크다운을 그대로** 내보내되(손실 0), 재현성 식별자
+        (``generated_at``·``content_hash``)를 원문 끝에 콜로폰 푸터로 덧붙인다(NFR-10).
+        파서를 재통과시키지 않으므로 사용자가 작성한 마크다운이 열화되지 않는다.
+        """
+        ...
 
-    def export(self, topic: str, html: str) -> str:
-        """저장된 PDF 파일의 절대 경로를 반환한다."""
+
+class MaterialExporter(Protocol):
+    """렌더링된 컨텐츠를 선택한 포맷으로 파일에 저장하고 저장 경로를 반환한다.
+
+    PDF 는 WeasyPrint 변환, HTML/Markdown 은 텍스트 쓰기로 분기하되, 권한 검증·
+    덮어쓰기 방지·원자적 쓰기 등 파일 안전 규칙은 모든 포맷에 동일하게 적용한다.
+    """
+
+    def export(self, topic: str, content: str, fmt: ExportFormat) -> str:
+        """저장된 산출물 파일의 절대 경로를 반환한다."""
         ...
 
 

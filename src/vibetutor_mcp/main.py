@@ -9,24 +9,19 @@ from __future__ import annotations
 from mcp.server.fastmcp import FastMCP
 
 from vibetutor_mcp.core.config import Settings
-from vibetutor_mcp.data.material.exporter import WeasyPrintExporter
+from vibetutor_mcp.data.material.exporter import FormatRouterExporter
 from vibetutor_mcp.data.material.renderer import JinjaMaterialRenderer
 from vibetutor_mcp.data.material.repository_impl import SqliteMaterialRepository
-from vibetutor_mcp.data.material.scanner import LocalCodeScanner
 from vibetutor_mcp.data.system_clock import SystemClock
 from vibetutor_mcp.domain.material.query import (
     GetMaterialUseCase,
     ListMaterialsUseCase,
     SearchMaterialUseCase,
 )
-from vibetutor_mcp.domain.material.usecase import (
-    GeneratePracticalMaterialUseCase,
-    GenerateTutorMaterialUseCase,
-)
+from vibetutor_mcp.domain.material.usecase import GeneratePracticalMaterialUseCase
 from vibetutor_mcp.presentation.prompts.template import register_prompts
 from vibetutor_mcp.presentation.resources.materials import register_resources
 from vibetutor_mcp.presentation.tools.generate_markdown_material import register_markdown_tools
-from vibetutor_mcp.presentation.tools.generate_material import register_tools
 from vibetutor_mcp.presentation.tools.search_material import register_search_tool
 
 
@@ -35,20 +30,11 @@ def build() -> FastMCP:
     cfg = Settings()
 
     renderer = JinjaMaterialRenderer(cfg.template_dir)
-    exporter = WeasyPrintExporter(cfg.output_dir, cfg.font_dir)
+    exporter = FormatRouterExporter(cfg.output_dir, cfg.font_dir)
     repository = SqliteMaterialRepository(cfg.session_factory)
     clock = SystemClock()
 
-    # 1. 표준 양식 교재 UseCase (코드 스캐너 사용)
-    generate_use_case = GenerateTutorMaterialUseCase(
-        scanner=LocalCodeScanner(cfg.project_root),
-        renderer=renderer,
-        exporter=exporter,
-        repository=repository,
-        clock=clock,
-    )
-
-    # 2. 10단계 실전 교재 UseCase (스캐너 비활성)
+    # 10단계 실전 교재 UseCase (마크다운 원문 → 파싱 → pdf/html/markdown 출력)
     practical_use_case = GeneratePracticalMaterialUseCase(
         renderer=renderer,
         exporter=exporter,
@@ -63,7 +49,6 @@ def build() -> FastMCP:
 
     mcp = FastMCP("VibeTutor")
     register_prompts(mcp)
-    register_tools(mcp, generate_use_case)
     register_markdown_tools(mcp, practical_use_case)
     register_search_tool(mcp, search_use_case)
     register_resources(mcp, list_use_case, get_use_case)
